@@ -168,6 +168,12 @@ def parse_args(args=None):
                         help="Run DeepSpeed autotuner to discover optimal configuration parameters "
                         "before running job.")
 
+    parser.add_argument("--node_rank",
+                        default=TORCH_DISTRIBUTED_NODE_RANK,
+                        type=int,
+                        help="(optional) Node rank used by PyTorch distributed for "
+                        "communication during training.")
+
     parser.add_argument(
         "--comment",
         default="",
