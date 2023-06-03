@@ -480,75 +480,80 @@ def main(args=None):
 
     multi_node_exec = args.force_multi or len(active_resources) > 1
 
-    if not multi_node_exec:
-        deepspeed_launch = [
-            sys.executable, "-u", "-m", "torch.distributed.launch", 
-            f"--master_addr={args.master_addr}", f"--master_port={args.master_port}"
-        ]
-        if args.no_python:
-            deepspeed_launch.append("--no_python")
-        if args.module:
-            deepspeed_launch.append("--module")
-        if args.no_local_rank:
-            deepspeed_launch.append("--no_local_rank")
-        if args.save_pid:
-            deepspeed_launch += ["--save_pid", f"{os.getpid()}"]
+    # if not multi_node_exec:
+    deepspeed_launch = [
+        sys.executable, "-u", "-m", "torch.distributed.launch", 
+        f"--master_addr={args.master_addr}", f"--master_port={args.master_port}"
+    ]
+    if multi_node_exec:
+        deepspeed_launch.append(f"--nnodes={args.num_nodes}")
+        deepspeed_launch.append(f"--nproc_per_node={args.num_gpus}")
+        deepspeed_launch.append(f"--node_rank={args.node_rank}")
+
+    if args.no_python:
+        deepspeed_launch.append("--no_python")
+    if args.module:
+        deepspeed_launch.append("--module")
+    if args.no_local_rank:
+        deepspeed_launch.append("--no_local_rank")
+    if args.save_pid:
+        deepspeed_launch += ["--save_pid", f"{os.getpid()}"]
 #         if args.enable_each_rank_log:
 #             deepspeed_launch.append(f"--enable_each_rank_log={args.enable_each_rank_log}")
-        if args.elastic_training:
-            deepspeed_launch.append("--enable_elastic_training")
-            deepspeed_launch.append(f"--max_elastic_nodes={args.max_elastic_nodes}")
-            deepspeed_launch.append(f"--min_elastic_nodes={args.min_elastic_nodes}")
-        if args.bind_cores_to_rank:
-            deepspeed_launch.append("--bind_cores_to_rank")
-        if args.bind_core_list != None:
-            deepspeed_launch.append(f"--bind_core_list={args.bind_core_list}")
-        cmd = deepspeed_launch + [args.user_script] + args.user_args
-    else:
-        args.launcher = args.launcher.lower()
-        if args.launcher == PDSH_LAUNCHER:
-            runner = PDSHRunner(args, world_info_base64)
-        elif args.launcher == OPENMPI_LAUNCHER:
-            runner = OpenMPIRunner(args, world_info_base64, resource_pool)
-        elif args.launcher == JSRUN_LAUNCHER:
-            runner = JSRunner(args, world_info_base64, resource_pool)
-        elif args.launcher == MPICH_LAUNCHER:
-            runner = MPICHRunner(args, world_info_base64, resource_pool)
-        elif args.launcher == IMPI_LAUNCHER:
-            runner = IMPIRunner(args, world_info_base64, resource_pool)
-        elif args.launcher == MVAPICH_LAUNCHER:
-            runner = MVAPICHRunner(args, world_info_base64, resource_pool)
-        elif args.launcher == SLURM_LAUNCHER:
-            runner = SlurmRunner(args, world_info_base64, resource_pool)
-        else:
-            raise NotImplementedError(f"Unknown launcher {args.launcher}")
+    if args.elastic_training:
+        deepspeed_launch.append("--enable_elastic_training")
+        deepspeed_launch.append(f"--max_elastic_nodes={args.max_elastic_nodes}")
+        deepspeed_launch.append(f"--min_elastic_nodes={args.min_elastic_nodes}")
+    if args.bind_cores_to_rank:
+        deepspeed_launch.append("--bind_cores_to_rank")
+    if args.bind_core_list != None:
+        deepspeed_launch.append(f"--bind_core_list={args.bind_core_list}")
+    cmd = deepspeed_launch + [args.user_script] + args.user_args
+    # else:
+    #     args.launcher = args.launcher.lower()
+    #     if args.launcher == PDSH_LAUNCHER:
+    #         runner = PDSHRunner(args, world_info_base64)
+    #     elif args.launcher == OPENMPI_LAUNCHER:
+    #         runner = OpenMPIRunner(args, world_info_base64, resource_pool)
+    #     elif args.launcher == JSRUN_LAUNCHER:
+    #         runner = JSRunner(args, world_info_base64, resource_pool)
+    #     elif args.launcher == MPICH_LAUNCHER:
+    #         runner = MPICHRunner(args, world_info_base64, resource_pool)
+    #     elif args.launcher == IMPI_LAUNCHER:
+    #         runner = IMPIRunner(args, world_info_base64, resource_pool)
+    #     elif args.launcher == MVAPICH_LAUNCHER:
+    #         runner = MVAPICHRunner(args, world_info_base64, resource_pool)
+    #     elif args.launcher == SLURM_LAUNCHER:
+    #         runner = SlurmRunner(args, world_info_base64, resource_pool)
+    #     else:
+    #         raise NotImplementedError(f"Unknown launcher {args.launcher}")
 
-        if not runner.backend_exists():
-            raise RuntimeError(f"launcher '{args.launcher}' not installed.")
+    #     if not runner.backend_exists():
+    #         raise RuntimeError(f"launcher '{args.launcher}' not installed.")
 
-        curr_path = os.path.abspath('.')
-        if 'PYTHONPATH' in env:
-            env['PYTHONPATH'] = curr_path + ":" + env['PYTHONPATH']
-        else:
-            env['PYTHONPATH'] = curr_path
+    #     curr_path = os.path.abspath('.')
+    #     if 'PYTHONPATH' in env:
+    #         env['PYTHONPATH'] = curr_path + ":" + env['PYTHONPATH']
+    #     else:
+    #         env['PYTHONPATH'] = curr_path
 
-        exports = ""
-        for var in env.keys():
-            if any([var.startswith(name) for name in EXPORT_ENVS]):
-                runner.add_export(var, env[var])
+    #     exports = ""
+    #     for var in env.keys():
+    #         if any([var.startswith(name) for name in EXPORT_ENVS]):
+    #             runner.add_export(var, env[var])
 
-        for environ_path in DEEPSPEED_ENVIRONMENT_PATHS:
-            environ_file = os.path.join(environ_path, DEEPSPEED_ENVIRONMENT_NAME)
-            if os.path.isfile(environ_file):
-                with open(environ_file, 'r') as fd:
-                    for var in fd.readlines():
-                        key, val = var.split('=', maxsplit=1)
-                        runner.add_export(key, val)
+    #     for environ_path in DEEPSPEED_ENVIRONMENT_PATHS:
+    #         environ_file = os.path.join(environ_path, DEEPSPEED_ENVIRONMENT_NAME)
+    #         if os.path.isfile(environ_file):
+    #             with open(environ_file, 'r') as fd:
+    #                 for var in fd.readlines():
+    #                     key, val = var.split('=', maxsplit=1)
+    #                     runner.add_export(key, val)
 
-        if args.launcher == PDSH_LAUNCHER:
-            cmd, kill_cmd = runner.get_cmd(env, active_resources)
-        else:
-            cmd = runner.get_cmd(env, active_resources)
+    #     if args.launcher == PDSH_LAUNCHER:
+    #         cmd, kill_cmd = runner.get_cmd(env, active_resources)
+    #     else:
+    #         cmd = runner.get_cmd(env, active_resources)
 
     logger.info(f"cmd = {' '.join(cmd)}")
 
