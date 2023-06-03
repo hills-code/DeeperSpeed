@@ -482,7 +482,7 @@ def main(args=None):
 
     if not multi_node_exec:
         deepspeed_launch = [
-            sys.executable, "-u", "-m", "torch.distributed.launch", f"--world_info={world_info_base64}",
+            sys.executable, "-u", "-m", "torch.distributed.launch", 
             f"--master_addr={args.master_addr}", f"--master_port={args.master_port}"
         ]
         if args.no_python:
@@ -493,8 +493,8 @@ def main(args=None):
             deepspeed_launch.append("--no_local_rank")
         if args.save_pid:
             deepspeed_launch += ["--save_pid", f"{os.getpid()}"]
-        if args.enable_each_rank_log:
-            deepspeed_launch.append(f"--enable_each_rank_log={args.enable_each_rank_log}")
+#         if args.enable_each_rank_log:
+#             deepspeed_launch.append(f"--enable_each_rank_log={args.enable_each_rank_log}")
         if args.elastic_training:
             deepspeed_launch.append("--enable_elastic_training")
             deepspeed_launch.append(f"--max_elastic_nodes={args.max_elastic_nodes}")
