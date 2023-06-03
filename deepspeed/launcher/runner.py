@@ -169,7 +169,7 @@ def parse_args(args=None):
                         "before running job.")
 
     parser.add_argument("--node_rank",
-                        default=TORCH_DISTRIBUTED_NODE_RANK,
+                        default=0,
                         type=int,
                         help="(optional) Node rank used by PyTorch distributed for "
                         "communication during training.")
