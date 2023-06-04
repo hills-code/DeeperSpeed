@@ -423,8 +423,8 @@ def main(args=None):
         args.master_addr = "127.0.0.1"
         multi_node_exec = False
 
-    if not multi_node_exec and args.num_nodes > 1:
-        raise ValueError("Num nodes is >1 but no extra nodes available via hostfile")
+    # if not multi_node_exec and args.num_nodes > 1:
+    #     raise ValueError("Num nodes is >1 but no extra nodes available via hostfile")
 
     active_resources = parse_inclusion_exclusion(resource_pool, args.include, args.exclude)
     env = os.environ.copy()
