@@ -84,6 +84,7 @@ class TorchBackend(Backend):
     def init_process_group(self, backend, timeout, init_method, rank, world_size):
         if not torch.distributed.is_initialized():
             utils.logger.info('Begin Initializing TorchBackend in DeepSpeed with backend {}'.format(dist_backend))
+            utils.logger.info(f'parameter is backend={backend}, timeout={timeout}, init_method={init_method}, rank={rank}, world_size={world_size}')
             torch.distributed.init_process_group(backend,
                                                  timeout=timeout,
                                                  init_method=init_method,
