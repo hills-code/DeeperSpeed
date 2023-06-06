@@ -699,7 +699,8 @@ class DeepSpeedConfig(object):
         except:
             self.global_rank = 0
             self.world_size = 1
-
+        logger.info(f"global rank is {self.global_rank}, world_size is {self.world_size}")
+        
         # If elastic-mode enabled, update compute + update _param_dict
         self.elasticity_enabled = elasticity_enabled(self._param_dict)
         if self.elasticity_enabled:
