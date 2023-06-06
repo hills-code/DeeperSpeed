@@ -83,11 +83,13 @@ class TorchBackend(Backend):
 
     def init_process_group(self, backend, timeout, init_method, rank, world_size):
         if not torch.distributed.is_initialized():
+            utils.logger.info('Begin Initializing TorchBackend in DeepSpeed with backend {}'.format(dist_backend))
             torch.distributed.init_process_group(backend,
                                                  timeout=timeout,
                                                  init_method=init_method,
                                                  rank=rank,
                                                  world_size=world_size)
+            utils.logger.info('End Initializing TorchBackend in DeepSpeed with backend {}'.format(dist_backend))
         self.using_mpi = torch.distributed.get_backend() == 'mpi'
 
     def all_reduce(self, tensor, op=torch.distributed.ReduceOp.SUM, group=None, async_op=False):
