@@ -873,6 +873,9 @@ class DeepSpeedConfig(object):
         self.dataloader_drop_last = get_dataloader_drop_last(param_dict)
 
         self.nebula_config = DeepSpeedNebulaConfig(param_dict)
+        self.gradient_accumulation_steps = 1
+        self.train_batch_size = self.gradient_accumulation_step * self.train_micro_batch_size_per_gpu * self.world_size
+
 
     def _batch_assertion(self):
 
