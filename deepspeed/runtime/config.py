@@ -895,7 +895,7 @@ class DeepSpeedConfig(object):
         train_batch = self.train_batch_size
         micro_batch = self.train_micro_batch_size_per_gpu
         grad_acc = self.gradient_accumulation_steps
-
+        logger.info(f'train batch {train_batch}, micro_batch {micro_batch}, grad_acc {grad_acc}')
         #print(f"train_batch = {train_batch}, micro_batch={micro_batch}")
 
         # all values are provided nothing needs to be set
