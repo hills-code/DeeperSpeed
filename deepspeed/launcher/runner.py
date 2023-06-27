@@ -37,6 +37,10 @@ DEEPSPEED_ENVIRONMENT_NAME = ".deepspeed_env"
 DEEPSPEED_ENVIRONMENT_PATHS = [os.path.expanduser("~"), '.']
 PDSH_MAX_FAN_OUT = 1024
 
+# On AISC compute, each node sets environment variables independently, want to prevent
+# exporting rank-0 env variables in case of heterogeneous compute.
+EXCLUDE_ENVS = {'AISC_JOB_NAME': ['NCCL_IB_HCA', 'UCX_NET_DEVICES']}
+
 
 def parse_args(args=None):
     parser = argparse.ArgumentParser(description="DeepSpeed runner to help launch distributed "
@@ -236,7 +240,7 @@ def _parse_hostfile(hostfile_lines):
             resource_pool[host] = num_slots
         else:
             logger.error(f"Bad hostfile text: {hostfile_lines}")
-            raise ValueError("Hostfile contains a bad entry: {line}, unable to proceed with launching")
+            raise ValueError(f"Hostfile contains a bad entry: {line}, unable to proceed with launching")
 
     if len(resource_pool) == 0:
         logger.error(f"Bad hostfile text: {hostfile_lines}")
@@ -574,7 +578,7 @@ def main(args=None):
         time.sleep(1)
         sys.exit(1)
 
-    if args.launcher == PDSH_LAUNCHER:
+    if args.launcher == PDSH_LAUNCHER and multi_node_exec:
         signal.signal(signal.SIGINT, sigkill_handler)
 
     result.wait()
